@@ -37,7 +37,7 @@ function wrap(x, size) {
 
 //////////////////////////////////////////////////////
 
-var SIZE = 20;
+var SIZE = 150;
 
 var BOARD = getArray2d(SIZE, false);
 
@@ -47,7 +47,7 @@ var CHECKS = [[-1, -1], [0, -1], [1, -1],
               [-1,  0],          [1,  0],
               [-1,  1], [0, 1],  [1,  1]];
 
-var TIME = 250;
+var TIMEOUT;
 
 //////////////////////////////////////////////////////
 
@@ -109,11 +109,15 @@ function update() {
             }
         }
     }
-    setTimeout(update, TIME);
+    start();
 }
 
 function start() {
-    setTimeout(update, TIME);
+    TIMEOUT = setTimeout(update, Number(document.getElementById('speed').value));
+}
+
+function stop() {
+    clearTimeout(TIMEOUT);
 }
 
 //////////////////////////////////////////////////////
