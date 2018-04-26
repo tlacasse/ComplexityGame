@@ -40,6 +40,7 @@ function wrap(x, size) {
 var SIZE = 50;
 
 var BOARD = getArray2d(SIZE, false);
+var ISTARGET = getArray2d(SIZE, false);
 
 var CELLS = [];
 
@@ -48,13 +49,21 @@ var CHECKS = [[-1, -1], [0, -1], [1, -1],
               [-1,  1], [0, 1],  [1,  1]];
 
 var TIMEOUT;
+var ISRUNNING = false;
 
 //////////////////////////////////////////////////////
 
 function flipCell(cell) {
     var coord = codeToCoord(cell.id);
-    BOARD[coord[0]][coord[1]] = !BOARD[coord[0]][coord[1]];
-    cell.className = BOARD[coord[0]][coord[1]] ? 'alive' : 'dead';
+    if (ISRUNNING) {
+        var use = !ISTARGET[coord[0]][coord[1]];
+        ISTARGET[coord[0]][coord[1]] = use;
+        BOARD[coord[0]][coord[1]] = use;
+        cell.className = use ? 'target' : 'dead';
+    } else {
+        BOARD[coord[0]][coord[1]] = !BOARD[coord[0]][coord[1]];
+        cell.className = BOARD[coord[0]][coord[1]] ? 'alive' : 'dead';
+    }
 }
 
 function updateCell(x, y, alive) {
@@ -94,18 +103,20 @@ function update() {
     }
     for (var x = 0; x < SIZE; x++) {
         for (var y = 0; y < SIZE; y++) {
-            var sum = 0;
-            for (var c = 0; c < 8; c++) {
-                var check = CHECKS[c];
-                var cx = wrap(x + check[0], SIZE);
-                var cy = wrap(y + check[1], SIZE);
-                sum += src[cx][cy] ? 1 : 0;
-            }
-            if (src[x][y] && (sum < 2 || sum > 3)) {
-                updateCell(x, y, false);
-            }
-            if (!src[x][y] && sum == 3) {
-                updateCell(x, y, true);
+            if (!ISTARGET[x][y]) {
+                var sum = 0;
+                for (var c = 0; c < 8; c++) {
+                    var check = CHECKS[c];
+                    var cx = wrap(x + check[0], SIZE);
+                    var cy = wrap(y + check[1], SIZE);
+                    sum += src[cx][cy] ? 1 : 0;
+                }
+                if (src[x][y] && (sum < 2 || sum > 3)) {
+                    updateCell(x, y, false);
+                }
+                if (!src[x][y] && sum == 3) {
+                    updateCell(x, y, true);
+                }
             }
         }
     }
@@ -113,10 +124,12 @@ function update() {
 }
 
 function start() {
+    ISRUNNING = true;
     TIMEOUT = setTimeout(update, Number(document.getElementById('speed').value));
 }
 
 function stop() {
+    ISRUNNING = false;
     clearTimeout(TIMEOUT);
 }
 
