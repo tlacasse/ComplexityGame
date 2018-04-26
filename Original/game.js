@@ -37,7 +37,7 @@ function wrap(x, size) {
 
 //////////////////////////////////////////////////////
 
-var SIZE = 150;
+var SIZE = 50;
 
 var BOARD = getArray2d(SIZE, false);
 
@@ -104,7 +104,7 @@ function update() {
             if (src[x][y] && (sum < 2 || sum > 3)) {
                 updateCell(x, y, false);
             }
-            if (!src[x][y]  && sum ==3) {
+            if (!src[x][y] && sum == 3) {
                 updateCell(x, y, true);
             }
         }
