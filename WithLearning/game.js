@@ -105,7 +105,6 @@ function setUpBoard() {
             cell.style.height = frac;
             cell.id = String(coordToCode(i, j));
             cell.setAttribute("name", generateRules(STARTING_RULES));
-            console.log(cell.getAttribute("name"));
             cell.className = 'dead';
             cell.onclick = function () { flipCell(this); };
             row.appendChild(cell);
@@ -135,11 +134,19 @@ function update() {
                     var cy = wrap(y + check[1], SIZE);
                     sum += src[cx][cy] ? 1 : 0;
                 }
-                if (src[x][y] && (sum < 2 || sum > 3)) {
-                    updateCell(x, y, false);
-                }
-                if (!src[x][y] && sum == 3) {
-                    updateCell(x, y, true);
+                var rules = CELLS[x][y].getAttribute("name");
+                for (var i = 0; i < rules.length; i++) {
+                    var r = RULE_ALIVE.indexOf(rules.charAt(i));
+                    if (r == -1) {
+                        r = RULE_DEAD.indexOf(rules.charAt(i));
+                        if (src[x][y] && sum == r) {
+                            updateCell(x, y, false);
+                        }
+                    } else {
+                        if (!src[x][y] && sum == r) {
+                            updateCell(x, y, true);
+                        }
+                    }
                 }
             }
         }
