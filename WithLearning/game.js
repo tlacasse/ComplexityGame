@@ -39,9 +39,16 @@ function removeCharAt(str, index) {
     return str.substr(0, index) + str.substr(index + 1);
 }
 
+function removeElementAt(arr, index) {
+    arr.splice(index, 1);
+    return arr;
+}
+
 //////////////////////////////////////////////////////
 
-var SIZE = 50;
+const SIZE = 50;
+const STARTING_RULES = 4;
+const LESS_THAN_DELETE_THRESHOLD = 5;
 
 var BOARD = getArray2d(SIZE, false);
 var ISTARGET = getArray2d(SIZE, false);
@@ -59,7 +66,6 @@ var RULE_ALIVE = 'ABCDEFGHI';
 var RULE_DEAD =  'abcdefghi';
 
 var RULE_SIZE = RULE_ALIVE.length;
-var STARTING_RULES = 4;
 
 var TIMEOUT;
 var ISRUNNING = false;
@@ -79,6 +85,43 @@ function generateRules(num) {
         }
     }
     return result;
+}
+
+// return array of [rule, strength]
+function allNearbyRules(x, y) {
+    var all = [];
+    var thisRules = CELLS[x][y].getAttribute("name");
+    for (var i = 0; i < thisRules.length; i++) {
+        all.push([thisRules.charAt(i), RULE_STRENGTH[x][y][i]]);
+    }
+    for (var c = 0; c < 8; c++) {
+        var check = CHECKS[c];
+        var cx = wrap(x + check[0], SIZE);
+        var cy = wrap(y + check[1], SIZE);
+        var otherRules = CELLS[cx][cy].getAttribute("name");
+        for (var i = 0; i < otherRules.length; i++) {
+            all.push([otherRules.charAt(i), RULE_STRENGTH[cx][cy][i]]);
+        }
+    }
+    return all;
+}
+
+// return array of [max_strength, array_of_rules]
+function bestNearbyRules(x, y) {
+    var all = allNearbyRules(x, y);
+    var max = -1000;
+    for (var i = 0; i < all.length; i++) {
+        if (all[i][1] > max) {
+            max = all[i][1]
+        }
+    }
+    var best = [];
+    for (var i = 0; i < all.length; i++) {
+        if (all[i][1] == max) {
+            best.push(all[i][0]);
+        }
+    }
+    return [max, best];
 }
 
 function flipCell(cell) {
@@ -160,6 +203,7 @@ function applyRules(x, y, src) {
 }
 
 function learnRules(x, y){
+    var bestget = bestNearbyRules(x, y);
 
 }
 
