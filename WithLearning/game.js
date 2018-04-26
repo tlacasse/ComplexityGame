@@ -46,12 +46,34 @@ var CELLS = [];
 
 var CHECKS = [[-1, -1], [0, -1], [1, -1],
               [-1,  0],          [1,  0],
-              [-1,  1], [0, 1],  [1,  1]];
+              [-1,  1], [0,  1], [1,  1]];
+
+//                012345678
+var RULE_ALIVE = 'ABCDEFGHI';
+var RULE_DEAD =  'abcdefghi';
+
+var RULE_SIZE = RULE_ALIVE.length;
+var STARTING_RULES = 4;
 
 var TIMEOUT;
 var ISRUNNING = false;
 
 //////////////////////////////////////////////////////
+
+function generateRules(num) {
+    var result = '';
+    for (var i = 0; i < num; i++) {
+        while (true) {
+            var index = Math.floor(Math.random() * RULE_SIZE);
+            var newRule = Math.random() >= 0.5 ? RULE_ALIVE.substr(index, 1) : RULE_DEAD.substr(index, 1);
+            if (result.indexOf(newRule) == -1) {
+                result += newRule;
+                break;
+            }
+        }
+    }
+    return result;
+}
 
 function flipCell(cell) {
     var coord = codeToCoord(cell.id);
@@ -82,6 +104,8 @@ function setUpBoard() {
             cell.style.width = frac;
             cell.style.height = frac;
             cell.id = String(coordToCode(i, j));
+            cell.setAttribute("name", generateRules(STARTING_RULES));
+            console.log(cell.getAttribute("name"));
             cell.className = 'dead';
             cell.onclick = function () { flipCell(this); };
             row.appendChild(cell);
