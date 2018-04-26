@@ -35,6 +35,10 @@ function wrap(x, size) {
     return x;
 }
 
+function removeCharAt(str, index) {
+    return str.substr(0, index) + str.substr(index + 1);
+}
+
 //////////////////////////////////////////////////////
 
 var SIZE = 50;
@@ -47,6 +51,8 @@ var CELLS = [];
 var CHECKS = [[-1, -1], [0, -1], [1, -1],
               [-1,  0],          [1,  0],
               [-1,  1], [0,  1], [1,  1]];
+
+var RULE_STRENGTH = [];
 
 //                012345678
 var RULE_ALIVE = 'ABCDEFGHI';
@@ -115,6 +121,48 @@ function setUpBoard() {
     }
 }
 
+function setUpRuleStrengths() {
+    for (var x = 0; x < SIZE; x++) {
+        var row = [];
+        for (var y = 0; y < SIZE; y++) {
+            var stren = [];
+            for (var i = 0; i < CELLS[x][y].getAttribute("name").length; i++) {
+                stren.push(0);
+            }
+            row.push(stren);
+        }
+        RULE_STRENGTH.push(row);
+    }
+}
+
+function applyRules(x, y, src) {
+    var sum = 0;
+    for (var c = 0; c < 8; c++) {
+        var check = CHECKS[c];
+        var cx = wrap(x + check[0], SIZE);
+        var cy = wrap(y + check[1], SIZE);
+        sum += src[cx][cy] ? 1 : 0;
+    }
+    var rules = CELLS[x][y].getAttribute("name");
+    for (var i = 0; i < rules.length; i++) {
+        var r = RULE_ALIVE.indexOf(rules.charAt(i));
+        if (r == -1) {
+            r = RULE_DEAD.indexOf(rules.charAt(i));
+            if (src[x][y] && sum == r) {
+                updateCell(x, y, false);
+            }
+        } else {
+            if (!src[x][y] && sum == r) {
+                updateCell(x, y, true);
+            }
+        }
+    }
+}
+
+function learnRules(x, y){
+
+}
+
 function update() {
     var src = [];
     for (var i = 0; i < SIZE; i++) {
@@ -127,27 +175,8 @@ function update() {
     for (var x = 0; x < SIZE; x++) {
         for (var y = 0; y < SIZE; y++) {
             if (!ISTARGET[x][y]) {
-                var sum = 0;
-                for (var c = 0; c < 8; c++) {
-                    var check = CHECKS[c];
-                    var cx = wrap(x + check[0], SIZE);
-                    var cy = wrap(y + check[1], SIZE);
-                    sum += src[cx][cy] ? 1 : 0;
-                }
-                var rules = CELLS[x][y].getAttribute("name");
-                for (var i = 0; i < rules.length; i++) {
-                    var r = RULE_ALIVE.indexOf(rules.charAt(i));
-                    if (r == -1) {
-                        r = RULE_DEAD.indexOf(rules.charAt(i));
-                        if (src[x][y] && sum == r) {
-                            updateCell(x, y, false);
-                        }
-                    } else {
-                        if (!src[x][y] && sum == r) {
-                            updateCell(x, y, true);
-                        }
-                    }
-                }
+                applyRules(x, y, src);
+                learnRules(x, y);
             }
         }
     }
@@ -167,3 +196,4 @@ function stop() {
 //////////////////////////////////////////////////////
 
 setUpBoard();
+setUpRuleStrengths();
