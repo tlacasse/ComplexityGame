@@ -46,7 +46,7 @@ function removeElementAt(arr, index) {
 
 //////////////////////////////////////////////////////
 
-const SIZE = 50;
+const SIZE = 100;
 const STARTING_RULES = 4;
 const LESS_THAN_DELETE_THRESHOLD = 5;
 const LEARN_DELAY = 10;
@@ -261,6 +261,7 @@ function update() {
         }
     }
     CYCLE++;
+    document.getElementById('cyclecount').innerHTML = 'Cycles: ' + String(CYCLE) + '&nbsp;&nbsp;&nbsp;';
     start();
 }
 
