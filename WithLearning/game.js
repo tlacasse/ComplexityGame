@@ -49,6 +49,7 @@ function removeElementAt(arr, index) {
 const SIZE = 50;
 const STARTING_RULES = 4;
 const LESS_THAN_DELETE_THRESHOLD = 5;
+const LEARN_DELAY = 10;
 
 var BOARD = getArray2d(SIZE, false);
 var ISTARGET = getArray2d(SIZE, false);
@@ -70,6 +71,8 @@ var RULE_SIZE = RULE_ALIVE.length;
 var TIMEOUT;
 var ISRUNNING = false;
 
+var CYCLE = 0;
+
 //////////////////////////////////////////////////////
 
 function generateRules(num) {
@@ -87,13 +90,9 @@ function generateRules(num) {
     return result;
 }
 
-// return array of [rule, strength]
+//return array of [rule, strength]
 function allNearbyRules(x, y) {
     var all = [];
-    var thisRules = CELLS[x][y].getAttribute("name");
-    for (var i = 0; i < thisRules.length; i++) {
-        all.push([thisRules.charAt(i), RULE_STRENGTH[x][y][i]]);
-    }
     for (var c = 0; c < 8; c++) {
         var check = CHECKS[c];
         var cx = wrap(x + check[0], SIZE);
@@ -106,18 +105,20 @@ function allNearbyRules(x, y) {
     return all;
 }
 
-// return array of [max_strength, array_of_rules]
+//return array of [max_strength, array_of_rules]
 function bestNearbyRules(x, y) {
     var all = allNearbyRules(x, y);
     var max = -1000;
+    //find max strength
     for (var i = 0; i < all.length; i++) {
         if (all[i][1] > max) {
-            max = all[i][1]
+            max = all[i][1];
         }
     }
     var best = [];
+    //add all rules with that max
     for (var i = 0; i < all.length; i++) {
-        if (all[i][1] == max) {
+        if (all[i][1] == max && best.indexOf(all[i][0]) == -1) {
             best.push(all[i][0]);
         }
     }
@@ -180,13 +181,21 @@ function setUpRuleStrengths() {
 
 function applyRules(x, y, src) {
     var sum = 0;
+    var rules = CELLS[x][y].getAttribute("name");
+    //check how many are alive
     for (var c = 0; c < 8; c++) {
         var check = CHECKS[c];
         var cx = wrap(x + check[0], SIZE);
         var cy = wrap(y + check[1], SIZE);
         sum += src[cx][cy] ? 1 : 0;
+        //reinforce rules if alive and by target
+        if (src[x][y] && ISTARGET[cx][cy]) {
+            for (var i = 0; i < rules.length; i++) {
+                RULE_STRENGTH[x][y][i]++;
+            }
+        }
     }
-    var rules = CELLS[x][y].getAttribute("name");
+    //apply rules
     for (var i = 0; i < rules.length; i++) {
         var r = RULE_ALIVE.indexOf(rules.charAt(i));
         if (r == -1) {
@@ -204,7 +213,34 @@ function applyRules(x, y, src) {
 
 function learnRules(x, y){
     var bestget = bestNearbyRules(x, y);
-
+    var rules = CELLS[x][y].getAttribute("name");
+    var max = -1000;
+    //find our max strength
+    for (var i = 0; i < rules.length; i++) {
+        if (RULE_STRENGTH[x][y][i] > max) {
+            max = RULE_STRENGTH[x][y][i];
+        }
+    }
+    //only consider nearby rules if they are better than anything we have
+    var bestStrength = bestget[0];
+    if (max < bestStrength) {
+        var bestRules = bestget[1];
+        //add good rules to our rules
+        for (var i = 0; i < bestRules.length; i++) {
+            if (rules.indexOf(bestRules[i]) == -1) {
+                rules += bestRules[i];
+                RULE_STRENGTH[x][y].push(bestStrength);
+            }
+        }
+        //remove rules less than the threshold
+        for (var i = 0; i < rules.length; i++) {
+            if (RULE_STRENGTH[x][y][i] <= bestStrength - LESS_THAN_DELETE_THRESHOLD) {
+                RULE_STRENGTH[x][y] = removeElementAt(RULE_STRENGTH[x][y], i);
+                rules = removeCharAt(rules, i);
+            }
+        }
+        CELLS[x][y].setAttribute("name", rules);
+    }
 }
 
 function update() {
@@ -224,6 +260,7 @@ function update() {
             }
         }
     }
+    CYCLE++;
     start();
 }
 
